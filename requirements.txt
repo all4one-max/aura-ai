@@ -1,4 +1,6 @@
 langgraph
+sqlmodel
 langchain
 pydantic
 python-dotenv
+langchain-openai

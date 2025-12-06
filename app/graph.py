@@ -1,25 +1,30 @@
-from langgraph.graph import StateGraph, END
-from app.state import AgentState
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END, StateGraph
+from langgraph.store.memory import InMemoryStore
+
+from app.agents.clarification import clarification_agent
 from app.agents.context import context_agent
+from app.agents.fulfillment import fulfillment_agent
 from app.agents.research import research_agent
 from app.agents.styling import styling_agent
-from app.agents.fulfillment import fulfillment_agent
+from app.state import AgentState
+
 
 def router(state: AgentState):
     """
     Decides the next node based on the 'next_step' key in the state.
     """
     next_step = state.get("next_step")
+    print(f"Routing to: {next_step}")  # Debugging
     if next_step == "research_agent":
         return "research_agent"
-    elif next_step == "styling_agent":
-        return "styling_agent"
-    elif next_step == "fulfillment_agent":
-        return "fulfillment_agent"
+    elif next_step == "clarification_agent":
+        return "clarification_agent"
     elif next_step == "END":
         return END
     else:
         return END
+
 
 def create_graph():
     workflow = StateGraph(AgentState)
@@ -29,47 +34,32 @@ def create_graph():
     workflow.add_node("research_agent", research_agent)
     workflow.add_node("styling_agent", styling_agent)
     workflow.add_node("fulfillment_agent", fulfillment_agent)
+    workflow.add_node("clarification_agent", clarification_agent)
 
     # Set entry point
     workflow.set_entry_point("context_agent")
 
     # Add edges
-    # For this simple linear flow, we route from one agent to the router which decides the next.
-    # Actually, in LangGraph, we can use conditional edges.
-    
+    # All nodes can potentially route to any other node or END via the router (and context_agent logic)
+
     workflow.add_conditional_edges(
         "context_agent",
         router,
         {
             "research_agent": "research_agent",
-            END: END
-        }
-    )
-
-    workflow.add_conditional_edges(
-        "research_agent",
-        router,
-        {
             "styling_agent": "styling_agent",
-            END: END
-        }
-    )
-
-    workflow.add_conditional_edges(
-        "styling_agent",
-        router,
-        {
             "fulfillment_agent": "fulfillment_agent",
-            END: END
-        }
+            "clarification_agent": "clarification_agent",
+            END: END,
+        },
     )
 
-    workflow.add_conditional_edges(
-        "fulfillment_agent",
-        router,
-        {
-            END: END
-        }
-    )
+    # Agents return to context_agent (planner) or router to decide next step?
+    # For now, let's have them go back to context_agent to reassess/plan.
+    # OR, if we trust they update state correctly, we can route directly.
+    # But usually "Hub and Spoke" means they go back to the Hub (Context).
 
-    return workflow.compile()
+    workflow.add_edge("research_agent", "styling_agent")
+    workflow.add_edge("clarification_agent", "context_agent")
+
+    return workflow.compile(checkpointer=InMemorySaver(), store=InMemoryStore())
