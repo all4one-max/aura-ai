@@ -1,9 +1,0 @@
-sqlite3 database.db
-
-.tables
-
-.headers on
-.mode column
-SELECT * FROM chatquery;
-
-.quit

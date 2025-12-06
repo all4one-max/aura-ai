@@ -47,8 +47,6 @@ def create_graph():
         router,
         {
             "research_agent": "research_agent",
-            "styling_agent": "styling_agent",
-            "fulfillment_agent": "fulfillment_agent",
             "clarification_agent": "clarification_agent",
             END: END,
         },

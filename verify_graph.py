@@ -104,6 +104,14 @@ if __name__ == "__main__":
     )
 
     run_test(
+        "Test using ChatQuery state so that we don't ask input every time",
+        "i am going for full moon party",
+        "",
+        "",
+        ["context_agent", "research_agent", "styling_agent"],
+    )
+
+    run_test(
         "Test General QnA",
         "what is capital of belgium",
         "",
