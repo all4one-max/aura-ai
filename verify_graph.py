@@ -1,0 +1,170 @@
+from langchain_core.messages import HumanMessage
+from langgraph.types import Command
+
+from app.database import clear_table
+from app.graph import create_graph
+from app.schema import ChatQuery
+
+
+def run_test(test_name, user_messages, expected_flow):
+    print(f"--- Running Test: {test_name} ---")
+
+    # Create graph with REAL agents
+    graph = create_graph()
+
+    # Initial state
+    input_data = {
+        "messages": [HumanMessage(content=user_messages[0])],
+    }
+    config = {"configurable": {"thread_id": "thread_id-1", "user_id": "sjha"}}
+
+    cur_user_message_index = 1
+    interrupt = False
+    executed_flow = []
+    while True:
+        result = None
+        if interrupt:
+            result = graph.invoke(
+                Command(
+                    resume=HumanMessage(content=user_messages[cur_user_message_index])
+                ),
+                config=config,
+            )
+            cur_user_message_index += 1
+        else:
+            result = graph.invoke(
+                input=input_data,
+                config=config,
+            )
+        executed_flow.append(result.get("next_step"))
+        if result.get("__interrupt__"):
+            interrupt = True
+            continue
+        break
+
+    # print(f"Executed Flow: {executed_flow}")
+
+    # # Check if expected flow is a SUBSEQUENCE of executed flow
+    # matches = True
+    # for node in expected_flow:
+    #     if node not in executed_flow:
+    #         matches = False
+    #         break
+
+    # if matches:
+    #     print("✅ Test Passed")
+    # else:
+    #     print(f"❌ Test Failed. Expected {expected_flow}")
+    print("\n")
+
+
+if __name__ == "__main__":
+    # Test 1: Recommendation -> Research -> Styling
+    # run_test(
+    #     "Recommendation and Fitment",
+    #     "Recommend me some shirts",
+    #     "the occasion is beach wedding",
+    #     ["context_agent", "__interrupt__"],
+    # )
+
+    clear_table(ChatQuery)
+
+    # run only one of them
+    # run_test(
+    #     "Recommendation and Fitment with multiple user input interrupts",
+    #     [
+    #         "Recommend me some shirts",
+    #         "I am going to thailand",
+    #         "I am going for a beach party",
+    #     ],
+    #     ["context_agent", "__interrupt__", "__interrupt__"],
+    # )
+
+    # run_test(
+    #     "Test using ChatQuery state so that we don't ask input every time",
+    #     ["show me something in red", "", ""],
+    #     ["context_agent", "research_agent", "styling_agent"],
+    # )
+
+    # run_test(
+    #     "Test using ChatQuery state so that we don't ask input every time",
+    #     ["i am going for full moon party", "", ""],
+    #     ["context_agent", "research_agent", "styling_agent"],
+    # )
+
+    # run_test(
+    #     "Direct general qna",
+    #     "what is capital of belgium",
+    #     ["context_agent"],
+    # )
+
+    run_test(
+        "some shopping stuff and the qna",
+        [
+            "recommend me some hats",
+            "i am going to thailand",
+            "for a beach party",
+        ],
+        ["context_agent", "__interrupt__", "__interrupt__"],
+    )
+
+    # run_test(
+    #     "some shopping stuff and the qna",
+    #     [
+    #         "recommend me some shirts, i am going to thailand for beach party",
+    #     ],
+    #     ["context_agent", "__interrupt__", "__interrupt__", "__interrupt__"],
+    # )
+
+    # run_test(
+    #     "some shopping stuff and the qna",
+    #     [
+    #         "recommend me some shirts",
+    #         "i am going to thailand",
+    #         "what is capital of belgium",
+    #         "i am going for a full moon party",
+    #     ],
+    #     ["context_agent", "__interrupt__", "__interrupt__", "__interrupt__"],
+    # )
+
+    # run_test(
+    #     "some shopping stuff and the qna",
+    #     [
+    #         "i am going for a full moon party",
+    #     ],
+    #     ["context_agent", "__interrupt__", "__interrupt__", "__interrupt__"],
+    # )
+
+    # run_test(
+    #     "Test General QnA",
+    #     "what is capital of belgium",
+    #     "",
+    #     "",
+    #     ["context_agent"],
+    # )
+
+    # # Test 2: Refinement (Matching Pant) -> Research -> Styling
+    # # Note: For real LLM we might need to be more explicit or carry over state,
+    # # but let's see if it infers solely from "Get me a matching pant" that it should research first.
+    # run_test(
+    #     "Refinement (Matching Pant)",
+    #     "Get me a matching pant with it",
+    #     ["context_agent", "research_agent", "styling_agent"]
+    # )
+
+    # # Test 3: Price Check (Cheaper) -> Research -> End (No styling)
+    # run_test(
+    #     "Price Check (Cheaper)",
+    #     "Can you get me a cheaper one?",
+    #     ["context_agent", "research_agent"]
+    # )
+
+    # Test 4: Purchase
+    # run_test(
+    #     "Purchase",
+    #     "Order these 2 pairs",
+    #     ["context_agent", "fulfillment_agent"]
+    # )
+
+    # Test 7: In the last run research agent was callend but in the next run we call style agent
+    # oh i like the red one, can you show how would i look
