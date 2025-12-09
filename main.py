@@ -137,6 +137,7 @@ async def chat(request: ChatRequest):
             response=response_text,
             thread_id=thread_id,
             user_id=request.user_id,
+            merged_images=result.get("merged_images", []),
         )
 
     except Exception as e:
