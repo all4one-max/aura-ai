@@ -3,7 +3,7 @@ from typing import Any, List, Optional, TypedDict
 from langgraph.graph.message import add_messages
 from typing_extensions import Annotated
 
-from app.schema import ChatQuery
+from app.schema import ChatQuery, Product
 
 
 class UserProfile(TypedDict):
@@ -16,8 +16,8 @@ class UserProfile(TypedDict):
 class AgentState(TypedDict):
     messages: Annotated[List[Any], add_messages]
     user_profile: Optional[UserProfile]
-    search_results: List[Any]
-    selected_item: Optional[Any]
+    search_results: List[Product]
+    selected_item: Optional[Product]
     next_step: Optional[str]
     user_intent: Optional[str]  # recommendation, styling, fulfillment, general_chat
     current_agent: Optional[str]

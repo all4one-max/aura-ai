@@ -21,7 +21,7 @@ def styling_agent(
         return {
             "messages": [
                 AIMessage(
-                    content=f"Here is how the {selected_item['name']} looks on you."
+                    content=f"Here is how the {selected_item.title} looks on you."
                 )
             ],
             "selected_item": selected_item,

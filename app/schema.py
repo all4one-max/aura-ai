@@ -1,6 +1,44 @@
 from typing import Optional
 
-from sqlmodel import Field, SQLModel
+from pydantic import BaseModel, Field
+from sqlmodel import Field as SQLField, SQLModel
+
+
+class Product(BaseModel):
+    """
+    Product schema returned from Google Shopping API search.
+    Required fields: image, price, link.
+    Optional fields: rating, title, source, reviews.
+    """
+    image: str = Field(description="Product image URL (thumbnail)", min_length=1)
+    price: str = Field(description="Product price", min_length=1)
+    link: str = Field(description="Product link/URL", min_length=1)
+    rating: Optional[float] = Field(default=None, description="Product rating (0-5 scale)")
+    title: str = Field(default="", description="Product title/name")
+    source: str = Field(default="", description="Product source/store")
+    reviews: Optional[int] = Field(default=None, description="Number of reviews")
+    
+    @classmethod
+    def get_required_fields(cls) -> list[str]:
+        """
+        Returns list of required field names from the schema.
+        Only fields that are truly required (image, price, link) are returned.
+        """
+        # Explicitly define required fields based on schema definition
+        # These are fields without defaults that must be present
+        return ["image", "price", "link"]
+    
+    @classmethod
+    def get_api_field_mapping(cls) -> dict[str, list[str]]:
+        """
+        Returns mapping of Product fields to API field names.
+        Used when API uses different field names.
+        """
+        return {
+            "image": ["thumbnail", "image"],
+            "link": ["link", "product_link"],
+            "price": ["price"],
+        }
 
 
 class ChatQuery(SQLModel, table=True):
@@ -8,35 +46,35 @@ class ChatQuery(SQLModel, table=True):
     Structured query extracted from user input for product search.
     """
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(description="The user identifier.")
-    thread_id: str = Field(description="The conversation thread identifier.")
+    id: Optional[int] = SQLField(default=None, primary_key=True)
+    user_id: str = SQLField(description="The user identifier.")
+    thread_id: str = SQLField(description="The conversation thread identifier.")
     
     # Required field
-    query: str = Field(description="The main search query/product description you're looking for")
+    query: str = SQLField(description="The main search query/product description you're looking for")
     
     # Optional filters
-    min_price: Optional[float] = Field(default=None, description="Minimum price filter (in local currency)")
-    max_price: Optional[float] = Field(default=None, description="Maximum price filter (in local currency)")
-    min_rating: Optional[float] = Field(default=None, description="Minimum product rating filter (0-5 scale)")
-    sort: Optional[str] = Field(default="relevance", description="Sort order: relevance, price_low, price_high, rating_high")
-    brand: Optional[str] = Field(default=None, description="Brand name filter")
-    color: Optional[str] = Field(default=None, description="Color filter")
-    material: Optional[str] = Field(default=None, description="Material filter")
-    size: Optional[str] = Field(default=None, description="Size filter")
-    category: Optional[str] = Field(default=None, description="Product category/type filter")
-    store: Optional[str] = Field(default=None, description="Store/Merchant name filter")
-    gender: Optional[str] = Field(default=None, description="Gender filter")
-    age_group: Optional[str] = Field(default=None, description="Age group filter")
-    condition: Optional[str] = Field(default=None, description="Product condition: new or used")
-    on_sale: bool = Field(default=False, description="Filter for items on sale")
-    free_shipping: bool = Field(default=False, description="Filter for free shipping")
-    google_domain: str = Field(default="google.co.in", description="Google domain to use")
-    gl: str = Field(default="in", description="Country code (ISO 3166-1 alpha-2)")
-    hl: str = Field(default="en", description="Language code (ISO 639-1)")
-    location: str = Field(default="India", description="Location string for search")
-    start: Optional[int] = Field(default=None, description="Pagination offset")
-    num: Optional[int] = Field(default=None, description="Number of results per page")
-    device: Optional[str] = Field(default=None, description="Device type: desktop or mobile")
-    no_cache: bool = Field(default=False, description="Bypass cached results")
-    use_light_api: bool = Field(default=False, description="Use Google Shopping Light API")
+    min_price: Optional[float] = SQLField(default=None, description="Minimum price filter (in local currency)")
+    max_price: Optional[float] = SQLField(default=None, description="Maximum price filter (in local currency)")
+    min_rating: Optional[float] = SQLField(default=None, description="Minimum product rating filter (0-5 scale)")
+    sort: Optional[str] = SQLField(default="relevance", description="Sort order: relevance, price_low, price_high, rating_high")
+    brand: Optional[str] = SQLField(default=None, description="Brand name filter")
+    color: Optional[str] = SQLField(default=None, description="Color filter")
+    material: Optional[str] = SQLField(default=None, description="Material filter")
+    size: Optional[str] = SQLField(default=None, description="Size filter")
+    category: Optional[str] = SQLField(default=None, description="Product category/type filter")
+    store: Optional[str] = SQLField(default=None, description="Store/Merchant name filter")
+    gender: Optional[str] = SQLField(default=None, description="Gender filter")
+    age_group: Optional[str] = SQLField(default=None, description="Age group filter")
+    condition: Optional[str] = SQLField(default=None, description="Product condition: new or used")
+    on_sale: bool = SQLField(default=False, description="Filter for items on sale")
+    free_shipping: bool = SQLField(default=False, description="Filter for free shipping")
+    google_domain: str = SQLField(default="google.co.in", description="Google domain to use")
+    gl: str = SQLField(default="in", description="Country code (ISO 3166-1 alpha-2)")
+    hl: str = SQLField(default="en", description="Language code (ISO 639-1)")
+    location: str = SQLField(default="India", description="Location string for search")
+    start: Optional[int] = SQLField(default=None, description="Pagination offset")
+    num: Optional[int] = SQLField(default=None, description="Number of results per page")
+    device: Optional[str] = SQLField(default=None, description="Device type: desktop or mobile")
+    no_cache: bool = SQLField(default=False, description="Bypass cached results")
+    use_light_api: bool = SQLField(default=False, description="Use Google Shopping Light API")
