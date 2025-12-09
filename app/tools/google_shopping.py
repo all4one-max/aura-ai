@@ -6,6 +6,7 @@ This module provides functionality to search Google Shopping using SerpApi.
 
 import os
 from typing import List, Dict, Any, Optional
+import asyncio
 
 from serpapi import GoogleSearch
 
@@ -152,7 +153,7 @@ def chat_query_to_query_filters(chat_query: ChatQuery) -> Dict[str, Any]:
     return query_filters
 
 
-def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]:
+async def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]:
     """
     Searches Google Shopping for the given query using SerpApi.
     Returns a list of products with validated required fields (image, price, link).
@@ -349,8 +350,11 @@ def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]:
     print(f"Searching Google Shopping ({engine}) for: '{final_query}' in {location}...")
 
     try:
-        search = GoogleSearch(params)
-        results = search.get_dict()
+        def _run_search():
+            search = GoogleSearch(params)
+            return search.get_dict()
+
+        results = await asyncio.to_thread(_run_search)
 
         # Check for API errors
         if "error" in results:

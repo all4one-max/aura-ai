@@ -50,7 +50,6 @@ venv.bak/
 
 
 # IDEs
-.vscode/
 .idea/
 
 # Tool Caches

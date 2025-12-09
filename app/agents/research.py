@@ -11,7 +11,7 @@ from app.tools.google_shopping import (
 )
 
 
-def research_agent(
+async def research_agent(
     state: AgentState, config: RunnableConfig, *, store: Optional[BaseStore] = None
 ):
     """
@@ -37,7 +37,9 @@ def research_agent(
     query_filters = chat_query_to_query_filters(chat_query)
 
     # Search Google Shopping
-    products = search_google_shopping(query_filters)[:5]
+    products = await search_google_shopping(query_filters)
+    # Get top 5
+    products = products[:5]
 
     if not products:
         return {

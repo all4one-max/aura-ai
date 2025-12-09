@@ -8,7 +8,7 @@ from langgraph.types import interrupt
 from app.state import AgentState
 
 
-def clarification_agent(
+async def clarification_agent(
     state: AgentState, config: RunnableConfig, *, store: Optional[BaseStore] = None
 ):
     print("Clarification Agent")

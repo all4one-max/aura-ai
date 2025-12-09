@@ -12,7 +12,7 @@ from app.tools.extraction import ChatQueryExtraction, extract_chat_query_tool
 from app.tools.intent import check_initial_intent
 
 
-def context_agent(
+async def context_agent(
     state: AgentState, config: RunnableConfig, *, store: Optional[BaseStore] = None
 ):
     print("Context Agent")
@@ -24,7 +24,7 @@ def context_agent(
     thread_id = config["metadata"]["thread_id"]
 
     # Check if the input is related to shopping (context-aware)
-    initial_intent = check_initial_intent(state.get("messages"))
+    initial_intent = await check_initial_intent(state.get("messages"))
     if not initial_intent.is_shopping_related:
         return {
             "user_intent": "general_chat",
@@ -36,10 +36,10 @@ def context_agent(
     # Fetch existing ChatQuery from DB
 
     # 1. Extract intents from conversation messages (last 5 user messages)
-    extracted_data: ChatQueryExtraction = extract_chat_query_tool(state.get("messages"))
+    extracted_data: ChatQueryExtraction = await extract_chat_query_tool(state.get("messages"))
 
     # 2. Update DB (Strong Typing)
-    final_query: ChatQuery = upsert_chat_query(user_id, thread_id, extracted_data)
+    final_query: ChatQuery = await upsert_chat_query(user_id, thread_id, extracted_data)
 
     # Deterministic Routing based on Missing Fields
     missing_fields = []

@@ -3,6 +3,7 @@ Centralized LLM service for external API calls.
 Provides unified interface for OpenAI and Google Gemini models.
 """
 
+import asyncio
 import os
 from typing import Optional, Any, List, Union
 
@@ -72,7 +73,7 @@ class LLMService:
             )
         return self._gemini_client
 
-    def generate_structured_output(self, prompt: str, output_schema: type[Any]) -> Any:
+    async def generate_structured_output(self, prompt: str, output_schema: type[Any]) -> Any:
         """
         Generate structured output using OpenAI with schema.
 
@@ -85,9 +86,9 @@ class LLMService:
         """
         client = self.get_openai_client()
         structured_llm = client.with_structured_output(output_schema)
-        return structured_llm.invoke(prompt)
+        return await structured_llm.ainvoke(prompt)
 
-    def generate_text(self, prompt: str) -> str:
+    async def generate_text(self, prompt: str) -> str:
         """
         Generate text using OpenAI.
 
@@ -98,10 +99,10 @@ class LLMService:
             Generated text response
         """
         client = self.get_openai_client()
-        response = client.invoke(prompt)
+        response = await client.ainvoke(prompt)
         return response.content
 
-    def generate_image_with_gemini(
+    async def generate_image_with_gemini(
         self,
         contents: List[Union[str, Image.Image]],
         model: str = "gemini-3-pro-image-preview",
@@ -120,7 +121,11 @@ class LLMService:
             ValueError: If no image found in response
         """
         client = self.get_gemini_client()
-        response = client.models.generate_content(model=model, contents=contents)
+        
+        # Run synchronous generate_content in a thread
+        response = await asyncio.to_thread(
+            client.models.generate_content, model=model, contents=contents
+        )
 
         # Extract image from response
         for part in response.parts:

@@ -8,6 +8,7 @@ from PIL import Image
 import requests
 from io import BytesIO
 from typing import List, Optional, Union
+import asyncio
 
 
 class EmbeddingService:
@@ -30,15 +31,9 @@ class EmbeddingService:
             self._processor = CLIPProcessor.from_pretrained(self.model_name)
             print("Model loaded.")
 
-    def get_image_embedding(self, image_input: Union[str, Image.Image]) -> np.ndarray:
+    def _get_embedding_sync(self, image_input: Union[str, Image.Image]) -> np.ndarray:
         """
-        Generates embedding for an image (from URL or PIL Image).
-
-        Args:
-            image_input: URL string of the image OR PIL Image object
-
-        Returns:
-            Normalized 768-dimensional numpy array embedding vector
+        Synchronous internal method to generate embedding.
         """
         self._load_model()
 
@@ -75,7 +70,19 @@ class EmbeddingService:
             # Return zero vector on failure to avoid crashing the pipeline
             return np.zeros(768)
 
-    def get_image_embeddings(
+    async def get_image_embedding(self, image_input: Union[str, Image.Image]) -> np.ndarray:
+        """
+        Generates embedding for an image (from URL or PIL Image).
+
+        Args:
+            image_input: URL string of the image OR PIL Image object
+
+        Returns:
+            Normalized 768-dimensional numpy array embedding vector
+        """
+        return await asyncio.to_thread(self._get_embedding_sync, image_input)
+
+    async def get_image_embeddings(
         self, image_inputs: List[Union[str, Image.Image]]
     ) -> List[np.ndarray]:
         """
@@ -87,4 +94,5 @@ class EmbeddingService:
         Returns:
             List of embedding vectors
         """
-        return [self.get_image_embedding(img) for img in image_inputs]
+        tasks = [self.get_image_embedding(img) for img in image_inputs]
+        return await asyncio.gather(*tasks)

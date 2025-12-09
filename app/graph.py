@@ -1,5 +1,3 @@
-import sqlite3
-
 from langgraph.graph import END, StateGraph
 from langgraph.store.memory import InMemoryStore
 
@@ -8,14 +6,7 @@ from app.agents.context import context_agent
 from app.agents.ranking import ranking_agent
 from app.agents.research import research_agent
 from app.agents.styling import styling_agent
-
-from langgraph.checkpoint.postgres import PostgresSaver
-from langgraph.checkpoint.sqlite import SqliteSaver
 from app.state import AgentState
-
-from app.config import DATABASE_URL
-
-import psycopg
 
 
 def router(state: AgentState):
@@ -34,7 +25,7 @@ def router(state: AgentState):
         return END
 
 
-def create_graph():
+def create_graph(checkpointer=None):
     workflow = StateGraph(AgentState)
 
     # Add nodes
@@ -48,8 +39,6 @@ def create_graph():
     workflow.set_entry_point("context_agent")
 
     # Add edges
-    # All nodes can potentially route to any other node or END via the router (and context_agent logic)
-
     workflow.add_conditional_edges(
         "context_agent",
         router,
@@ -60,27 +49,8 @@ def create_graph():
         },
     )
 
-    # Agents return to context_agent (planner) or router to decide next step?
-    # For now, let's have them go back to context_agent to reassess/plan.
-    # OR, if we trust they update state correctly, we can route directly.
-    # But usually "Hub and Spoke" means they go back to the Hub (Context).
-
     workflow.add_edge("research_agent", "styling_agent")
-    workflow.add_edge("styling_agent", "ranking_agent")
+    # workflow.add_edge("styling_agent", "ranking_agent")
     workflow.add_edge("clarification_agent", "context_agent")
 
-    # Use appropriate checkpointer based on database type
-
-    if DATABASE_URL.startswith("postgresql"):
-        # PostgreSQL for production
-        conn = psycopg.connect(DATABASE_URL, autocommit=True)
-
-        memory = PostgresSaver(conn)
-    else:
-        # SQLite for local development
-
-        conn = sqlite3.connect("database.db", check_same_thread=False)
-
-        memory = SqliteSaver(conn)
-
-    return workflow.compile(checkpointer=memory, store=InMemoryStore())
+    return workflow.compile(checkpointer=checkpointer, store=InMemoryStore())

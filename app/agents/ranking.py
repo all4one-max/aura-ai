@@ -94,7 +94,7 @@ def rank_merged_images(
     return [x[0] for x in scores]
 
 
-def ranking_agent(
+async def ranking_agent(
     state: AgentState, config: RunnableConfig, *, store: Optional[BaseStore] = None
 ):
     """

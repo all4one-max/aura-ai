@@ -207,7 +207,7 @@ class ChatQueryExtraction(BaseModel):
     )
 
 
-def extract_chat_query_tool(messages: list) -> ChatQueryExtraction:
+async def extract_chat_query_tool(messages: list) -> ChatQueryExtraction:
     """
     Uses an LLM to extract structured query parameters from conversation messages.
     Builds a comprehensive query from last 5 user messages + extracted context fields.
@@ -251,7 +251,7 @@ Query should be: "shirts for wedding in bali december"
 
 Build a natural, comprehensive search query from the conversation."""
 
-    result = llm_service.generate_structured_output(
+    result = await llm_service.generate_structured_output(
         extraction_prompt, ChatQueryExtraction
     )
     return result

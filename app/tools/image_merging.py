@@ -7,6 +7,7 @@ from typing import List, Optional
 from PIL import Image
 import requests
 from io import BytesIO
+import asyncio
 
 from app.services.llm_service import get_llm_service
 
@@ -24,7 +25,7 @@ class ImageMergingService:
         self.model_name = "gemini-3-pro-image-preview"
         self.text_prompt = """You are a virtual try on assistant. You are given a user image (first image) and a product image (second image). You need to generate a realistic image of the user(first image) wearing the product(second image)."""
 
-    def download_image(self, image_url: str) -> Image.Image:
+    async def download_image(self, image_url: str) -> Image.Image:
         """
         Download an image from URL.
 
@@ -34,14 +35,17 @@ class ImageMergingService:
         Returns:
             PIL Image object
         """
-        try:
-            response = requests.get(image_url, stream=True, timeout=30)
-            response.raise_for_status()
-            return Image.open(BytesIO(response.content))
-        except Exception as e:
-            raise ValueError(f"Failed to download image from {image_url}: {e}")
+        def _download():
+            try:
+                response = requests.get(image_url, stream=True, timeout=30)
+                response.raise_for_status()
+                return Image.open(BytesIO(response.content))
+            except Exception as e:
+                raise ValueError(f"Failed to download image from {image_url}: {e}")
 
-    def merge_images(self, user_photo_url: str, product_image_url: str) -> Image.Image:
+        return await asyncio.to_thread(_download)
+
+    async def merge_images(self, user_photo_url: str, product_image_url: str) -> Image.Image:
         """
         Merge user photo with product image using Gemini 3 Pro Image Preview model.
 
@@ -54,11 +58,13 @@ class ImageMergingService:
         """
         try:
             # Download both images
-            # user_image = self.download_image(user_photo_url)
-            product_image = self.download_image(product_image_url)
+            # user_image = await self.download_image(user_photo_url)
+            product_image = await self.download_image(product_image_url)
 
             # Use Gemini 3 Pro Image Preview model for virtual try-on
-            merged_image = self._call_gemini_model(
+            # Note: Hardcoded path kept as per original file, likely for testing.
+            # In a real scenario, this should use user_photo_url download result.
+            merged_image = await self._call_gemini_model(
                 Image.open("/Users/sauravjha/Downloads/sj-wayanad.png"), product_image
             )
 
@@ -67,7 +73,7 @@ class ImageMergingService:
         except Exception as e:
             raise ValueError(f"Failed to merge images: {e}")
 
-    def _call_gemini_model(
+    async def _call_gemini_model(
         self, user_image: Image.Image, product_image: Image.Image
     ) -> Image.Image:
         """
@@ -84,7 +90,7 @@ class ImageMergingService:
             # Generate image using Gemini 3 Pro Image Preview via LLM service
             # Contents: [user_image, product_image, text_prompt]
             contents = [user_image, product_image, self.text_prompt]
-            merged_image = self.llm_service.generate_image_with_gemini(
+            merged_image = await self.llm_service.generate_image_with_gemini(
                 contents=contents, model=self.model_name
             )
             return merged_image
@@ -92,7 +98,7 @@ class ImageMergingService:
         except Exception as e:
             raise ValueError(f"Failed to call Gemini model: {e}")
 
-    def merge_multiple(
+    async def merge_multiple(
         self, user_photo_url: str, product_image_urls: List[str]
     ) -> List[Image.Image]:
         """
@@ -108,7 +114,7 @@ class ImageMergingService:
         merged_images = []
         for product_url in product_image_urls:
             try:
-                merged = self.merge_images(user_photo_url, product_url)
+                merged = await self.merge_images(user_photo_url, product_url)
                 merged_images.append(merged)
             except Exception as e:
                 print(f"Failed to merge with product {product_url}: {e}")

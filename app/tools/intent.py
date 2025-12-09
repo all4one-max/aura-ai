@@ -23,7 +23,7 @@ class InitialIntent(BaseModel):
     )
 
 
-def check_initial_intent(messages: List[BaseMessage]) -> InitialIntent:
+async def check_initial_intent(messages: List[BaseMessage]) -> InitialIntent:
     """
     Analyzes the last 5 conversation turns plus the current message to determine
     if the current user message is shopping-related or general Q&A.
@@ -90,4 +90,4 @@ user: I need clothes for a wedding [CURRENT MESSAGE]
 Classify the CURRENT MESSAGE now."""
 
     llm_service = get_llm_service()
-    return llm_service.generate_structured_output(prompt, InitialIntent)
+    return await llm_service.generate_structured_output(prompt, InitialIntent)

@@ -31,3 +31,4 @@ class AgentState(TypedDict):
     ranked_products: Optional[
         List[ProductWithEmbedding]
     ]  # Ranked products after ranking agent
+    merged_images: Optional[List[str]]  # Merged images for styling agent
