@@ -1,7 +1,8 @@
 from typing import Optional
 
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
+
+from app.services.llm_service import get_llm_service
 
 
 # Define a subset model for extraction (excluding IDs)
@@ -172,10 +173,6 @@ def extract_chat_query_tool(user_query: str) -> ChatQueryExtraction:
     """
     Uses an LLM to extract structured query parameters from natural language input.
     """
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-    # Use with_structured_output to force the LLM to return our schema
-    structured_llm = llm.with_structured_output(ChatQueryExtraction)
-
-    result = structured_llm.invoke(user_query)
+    llm_service = get_llm_service()
+    result = llm_service.generate_structured_output(user_query, ChatQueryExtraction)
     return result

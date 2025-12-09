@@ -5,8 +5,9 @@ Intent classification tool for determining if user input is shopping-related.
 from typing import List
 
 from langchain_core.messages import BaseMessage, HumanMessage
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
+
+from app.services.llm_service import get_llm_service
 
 
 class InitialIntent(BaseModel):
@@ -88,7 +89,5 @@ user: I need clothes for a wedding [CURRENT MESSAGE]
 
 Classify the CURRENT MESSAGE now."""
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    structured_llm = llm.with_structured_output(InitialIntent)
-
-    return structured_llm.invoke(prompt)
+    llm_service = get_llm_service()
+    return llm_service.generate_structured_output(prompt, InitialIntent)

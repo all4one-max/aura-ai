@@ -18,7 +18,7 @@ def fulfillment_agent(
         return {
             "messages": [
                 AIMessage(
-                    content=f"Ordering {selected_item['name']} for ${selected_item['price']}. Order placed!"
+                    content=f"Ordering {selected_item.title} for {selected_item.price}. Order placed!"
                 )
             ],
             "current_agent": "fulfillment_agent",

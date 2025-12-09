@@ -8,6 +8,7 @@ from langgraph.store.memory import InMemoryStore
 from app.agents.clarification import clarification_agent
 from app.agents.context import context_agent
 from app.agents.fulfillment import fulfillment_agent
+from app.agents.ranking import ranking_agent
 from app.agents.research import research_agent
 from app.agents.styling import styling_agent
 from app.state import AgentState
@@ -36,6 +37,7 @@ def create_graph():
     workflow.add_node("context_agent", context_agent)
     workflow.add_node("research_agent", research_agent)
     workflow.add_node("styling_agent", styling_agent)
+    workflow.add_node("ranking_agent", ranking_agent)
     workflow.add_node("fulfillment_agent", fulfillment_agent)
     workflow.add_node("clarification_agent", clarification_agent)
 
@@ -61,6 +63,7 @@ def create_graph():
     # But usually "Hub and Spoke" means they go back to the Hub (Context).
 
     workflow.add_edge("research_agent", "styling_agent")
+    workflow.add_edge("styling_agent", "ranking_agent")
     workflow.add_edge("clarification_agent", "context_agent")
 
     sqllite_url = os.getenv("SQLLITE_URL", "")

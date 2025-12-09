@@ -7,6 +7,7 @@ Aura AI is an agentic shopping assistant built with LangGraph, LangChain, and SQ
 - Python 3.12+
 - [uv](https://github.com/astral-sh/uv) (fast Python package installer and resolver)
 - OpenAI API Key
+- SerpApi API Key (for Google Shopping search)
 
 ## Setup & Installation
 
@@ -24,10 +25,13 @@ Aura AI is an agentic shopping assistant built with LangGraph, LangChain, and SQ
     ```bash
     cp .env.template .env
     ```
-    Then, open `.env` and replace `your_api_key_here` with your actual OpenAI API key:
+    Then, open `.env` and add your API keys:
     ```env
     OPENAI_API_KEY=sk-proj-...
+    SERPAPI_API_KEY=your_serpapi_key_here
     ```
+    
+    Get your SerpApi key from: https://serpapi.com/
 
 ## Database Setup
 
