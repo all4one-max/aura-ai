@@ -44,16 +44,9 @@ def context_agent(
     final_query: ChatQuery = upsert_chat_query(user_id, thread_id, extracted_data)
 
     # Deterministic Routing based on Missing Fields
-    missing_fields = []
-    if not final_query.destination:
-        missing_fields.append("destination")
-    if not final_query.product_type:
-        missing_fields.append("product type")
-    if not final_query.occasion:
-        missing_fields.append("occasion")
-
-    if missing_fields:
-        response_msg = f"To generate the best recommendations, I need to know the {', '.join(missing_fields)}."
+    # Only 'query' is required - if it's missing or empty, ask for clarification
+    if not final_query.query or not final_query.query.strip():
+        response_msg = "To help you find products, I need to know what you're looking for. What product or item are you searching for?"
         return {
             "user_intent": "clarification",
             "next_step": "clarification_agent",
