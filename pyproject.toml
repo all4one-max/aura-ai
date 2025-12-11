@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "aura-ai"
 version = "0.1.0"
 description = "Add your description here"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "google-genai>=1.53.0",
@@ -36,5 +37,5 @@ dependencies = [
     "python-multipart>=0.0.9",
 ]
 
-[tool.setuptools]
-packages = ["app", "api_models"]
+[tool.setuptools.packages.find]
+include = ["app*", "api_models*"]
