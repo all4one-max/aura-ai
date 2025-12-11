@@ -68,3 +68,7 @@ database.db-*
 aura-ai-sa-key.json
 *.json.key
 *sa-key.json
+
+# Frontend (separate deployment)
+frontend/
+frontend/**
