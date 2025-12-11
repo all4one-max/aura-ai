@@ -6,13 +6,12 @@ build-backend = "setuptools.build_meta"
 packages = ["app", "api_models"]
 
 [tool.setuptools.package-data]
-"*" = ["*.json", "*.txt"]
+"*" = ["*.json", "*.txt", "*.md"]
 
 [project]
 name = "aura-ai"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "google-genai>=1.53.0",
