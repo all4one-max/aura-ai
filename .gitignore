@@ -63,3 +63,8 @@ htmlcov/
 *.log
 
 database.db-*
+
+# Secret files
+aura-ai-sa-key.json
+*.json.key
+*sa-key.json

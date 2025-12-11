@@ -35,18 +35,27 @@ async def research_agent(
 
     # Convert ChatQuery to query_filters format
     query_filters = chat_query_to_query_filters(chat_query)
+    print(f"📋 Research Agent - ChatQuery: {chat_query}")
+    print(f"📋 Research Agent - Query Filters: {query_filters}")
 
     # Search Google Shopping
-    products = await search_google_shopping(query_filters)
-    # Get top 5
-    products = products[:5]
+    try:
+        products = await search_google_shopping(query_filters)
+        # Get top 5
+        products = products[:5]
+        print(f"✅ Research Agent - Found {len(products)} products")
+    except Exception as e:
+        print(f"❌ Research Agent - Exception during search: {e}")
+        import traceback
+        traceback.print_exc()
+        products = []
 
     if not products:
+        error_msg = "I couldn't find any products matching your criteria. Please try adjusting your search."
+        print(f"⚠️  Research Agent - No products found. ChatQuery: {chat_query}")
         return {
             "messages": [
-                AIMessage(
-                    content="I couldn't find any products matching your criteria. Please try adjusting your search."
-                )
+                AIMessage(content=error_msg)
             ],
             "search_results": [],
             "current_agent": "research_agent",

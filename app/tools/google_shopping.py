@@ -348,6 +348,7 @@ async def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]
         params["no_cache"] = "true"
 
     print(f"Searching Google Shopping ({engine}) for: '{final_query}' in {location}...")
+    print(f"📋 Query Parameters: {params}")
 
     try:
         def _run_search():
@@ -359,9 +360,14 @@ async def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]
         # Check for API errors
         if "error" in results:
             error_msg = results.get("error", "Unknown error")
-            print(f"API Error: {error_msg}")
+            print(f"❌ API Error: {error_msg}")
+            print(f"📋 Full error response: {results}")
+            print(f"📋 Query used: '{final_query}'")
+            print(f"📋 Parameters sent: {params}")
             if "invalid" in error_msg.lower() or "api key" in error_msg.lower():
                 print("⚠️  Please verify your SERPAPI_API_KEY is correct.")
+            import traceback
+            traceback.print_exc()
             return []
 
         # Check for shopping_results
@@ -376,7 +382,11 @@ async def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]
                 shopping_results = results.get("products", [])
 
             if not shopping_results:
-                print("No products found in API response.")
+                print(f"⚠️  No products found in API response.")
+                print(f"📋 Query used: '{final_query}'")
+                print(f"📋 Parameters sent: {params}")
+                print(f"📋 Response keys: {list(results.keys())}")
+                print(f"📋 Full response (first 500 chars): {str(results)[:500]}")
                 return []
 
         # Validate products with required fields
@@ -423,8 +433,9 @@ async def search_google_shopping(query_filters: Dict[str, Any]) -> List[Product]
         return filtered_products
 
     except Exception as e:
-        print(f"❌ An error occurred: {e}")
+        print(f"❌ Exception while searching Google Shopping: {e}")
+        print(f"📋 Query used: '{final_query}'")
+        print(f"📋 Parameters sent: {params}")
         import traceback
-
         traceback.print_exc()
         return []

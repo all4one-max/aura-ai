@@ -29,7 +29,10 @@ class ChatResponse(BaseModel):
     response: str
     thread_id: str
     user_id: str
+    request_id: str  # Unique identifier for this request
     merged_images: Optional[List[str]] = None
+    styled_products: Optional[List[dict]] = None  # Deprecated: Use ranked_products instead (kept for backward compatibility)
+    ranked_products: Optional[List[dict]] = None  # Ranked products with embeddings and merged image URLs (prioritized)
 
     class Config:
         json_schema_extra = {

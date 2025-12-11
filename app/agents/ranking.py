@@ -66,6 +66,17 @@ def rank_merged_images(
             if isinstance(user_embedding.intent_embedding, list)
             else user_embedding.intent_embedding
         )
+        
+        # Pad color embedding to match image embedding dimension (256 -> 768)
+        # Color embedding is 256-dim, but merged image embeddings are 768-dim (CLIP)
+        if color_emb.shape[0] != img_vec.shape[0]:
+            if color_emb.shape[0] < img_vec.shape[0]:
+                # Pad with zeros to match image embedding dimension
+                padding_size = img_vec.shape[0] - color_emb.shape[0]
+                color_emb = np.pad(color_emb, (0, padding_size), mode='constant', constant_values=0)
+            else:
+                # Truncate if somehow larger (shouldn't happen)
+                color_emb = color_emb[:img_vec.shape[0]]
 
         # 1. Compute similarity scores for each user vector
         style_score = compute_cosine_similarity(style_emb, img_vec)
@@ -124,15 +135,48 @@ async def ranking_agent(
     user_embeddings_raw = user_profile.get("user_embeddings")
 
     if not user_embeddings_raw:
+        # Return products with embeddings but without sorting when user embeddings are missing
+        print("⚠️ User embeddings not found. Returning products with embeddings without sorting.")
+        
+        # Filter to only return products that have embeddings
+        products_with_embeddings = [
+            product for product in styled_products 
+            if product.embedding is not None
+        ]
+        
+        # Create message with products in additional_kwargs
+        products_data = []
+        for product in products_with_embeddings:
+            embedding = product.embedding
+            if isinstance(embedding, np.ndarray):
+                embedding = embedding.tolist()
+            elif hasattr(embedding, 'tolist'):
+                embedding = embedding.tolist()
+            
+            products_data.append({
+                "id": product.id,
+                "image": product.image,
+                "price": product.price,
+                "link": product.link,
+                "rating": product.rating,
+                "title": product.title,
+                "source": product.source,
+                "reviews": product.reviews,
+                "merged_image_url": product.merged_image_url,
+                "user_photo_url": product.user_photo_url,
+                "embedding": embedding,
+            })
+        
         return {
             "messages": [
                 AIMessage(
-                    content="User preference embeddings not found. Cannot rank products without user profile."
+                    content="Here are your product recommendations!",
+                    additional_kwargs={"ranked_products": products_data}
                 )
             ],
             "current_agent": "ranking_agent",
             "next_step": None,
-            "ranked_products": styled_products,  # Return unranked if no embeddings
+            "ranked_products": products_with_embeddings,  # Return products with embeddings but unsorted
         }
 
     # Convert to UserEmbedding if it's a dict
@@ -173,10 +217,34 @@ async def ranking_agent(
     # Reorder products based on ranking
     ranked_products = [styled_products[idx] for idx in ranked_indices]
 
+    # Create message with ranked_products in additional_kwargs
+    products_data = []
+    for product in ranked_products:
+        embedding = product.embedding
+        if isinstance(embedding, np.ndarray):
+            embedding = embedding.tolist()
+        elif hasattr(embedding, 'tolist'):
+            embedding = embedding.tolist()
+        
+        products_data.append({
+            "id": product.id,
+            "image": product.image,
+            "price": product.price,
+            "link": product.link,
+            "rating": product.rating,
+            "title": product.title,
+            "source": product.source,
+            "reviews": product.reviews,
+            "merged_image_url": product.merged_image_url,
+            "user_photo_url": product.user_photo_url,
+            "embedding": embedding,
+        })
+    
     return {
         "messages": [
             AIMessage(
-                content=f"I've ranked {len(ranked_products)} products based on your preferences and style. Here are the top recommendations."
+                content=f"I've ranked {len(ranked_products)} products based on your preferences and style. Here are the top recommendations.",
+                additional_kwargs={"ranked_products": products_data}
             )
         ],
         "current_agent": "ranking_agent",

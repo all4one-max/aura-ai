@@ -17,8 +17,6 @@ def router(state: AgentState):
     # print(f"Routing to: {next_step}")  # Debugging
     if next_step == "research_agent":
         return "research_agent"
-    elif next_step == "clarification_agent":
-        return "clarification_agent"
     elif next_step == "END":
         return END
     else:
@@ -50,7 +48,10 @@ def create_graph(checkpointer=None):
     )
 
     workflow.add_edge("research_agent", "styling_agent")
-    # workflow.add_edge("styling_agent", "ranking_agent")
-    workflow.add_edge("clarification_agent", "context_agent")
+    workflow.add_edge("styling_agent", "ranking_agent")
+    workflow.add_edge("ranking_agent", END)
+    # Clarification agent ends the flow - user needs to send another message
+    # When user sends next message, it will start from context_agent again (state is persisted)
+    workflow.add_edge("clarification_agent", END)
 
     return workflow.compile(checkpointer=checkpointer, store=InMemoryStore())

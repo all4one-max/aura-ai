@@ -4,9 +4,15 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from app.config import DATABASE_URL
 
+# Import all models so SQLModel can create their tables
+from app.schema import ChatQuery, User, ProductEmbedding, AgentStateTable
+
 # Adjust DATABASE_URL for async drivers if necessary
 async_database_url = DATABASE_URL
-if DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+asyncpg://"):
+if DATABASE_URL.startswith("sqlite://"):
+    # SQLite requires aiosqlite for async operations
+    async_database_url = DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://")
+elif DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+asyncpg://"):
     # Using asyncpg as it is generally recommended for async SQLAlchemy
     async_database_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
